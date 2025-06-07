@@ -1,56 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   --background: hsl(0, 0%, 100%);
-  --foreground: hsl(20, 14.3%, 4.1%);
-  --muted: hsl(60, 4.8%, 95.9%);
-  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --foreground: hsl(0, 0%, 0%);
+  --muted: hsl(0, 0%, 98%);
+  --muted-foreground: hsl(0, 0%, 45%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --popover-foreground: hsl(0, 0%, 0%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(20, 14.3%, 4.1%);
-  --border: hsl(20, 5.9%, 90%);
-  --input: hsl(20, 5.9%, 90%);
-  --primary: hsl(214, 84%, 56%);
-  --primary-foreground: hsl(211, 100%, 99%);
-  --secondary: hsl(60, 4.8%, 95.9%);
-  --secondary-foreground: hsl(24, 9.8%, 10%);
-  --accent: hsl(142, 71%, 45%);
-  --accent-foreground: hsl(60, 9.1%, 97.8%);
-  --destructive: hsl(0, 84.2%, 60.2%);
-  --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(20, 14.3%, 4.1%);
-  --radius: 0.5rem;
-  --chart-1: hsl(214, 84%, 56%);
-  --chart-2: hsl(142, 71%, 45%);
-  --chart-3: hsl(262, 83%, 58%);
-  --chart-4: hsl(43, 74%, 66%);
-  --chart-5: hsl(27, 87%, 67%);
+  --card-foreground: hsl(0, 0%, 0%);
+  --border: hsl(0, 0%, 92%);
+  --input: hsl(0, 0%, 96%);
+  --primary: hsl(0, 0%, 0%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(0, 0%, 96%);
+  --secondary-foreground: hsl(0, 0%, 0%);
+  --accent: hsl(0, 0%, 96%);
+  --accent-foreground: hsl(0, 0%, 0%);
+  --destructive: hsl(0, 0%, 0%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --ring: hsl(0, 0%, 0%);
+  --radius: 0rem;
+  --chart-1: hsl(0, 0%, 20%);
+  --chart-2: hsl(0, 0%, 40%);
+  --chart-3: hsl(0, 0%, 60%);
+  --chart-4: hsl(0, 0%, 80%);
+  --chart-5: hsl(0, 0%, 90%);
 }
 
 .dark {
-  --background: hsl(240, 10%, 3.9%);
-  --foreground: hsl(0, 0%, 98%);
-  --muted: hsl(240, 3.7%, 15.9%);
-  --muted-foreground: hsl(240, 5%, 64.9%);
-  --popover: hsl(240, 10%, 3.9%);
-  --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(240, 10%, 3.9%);
-  --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(240, 3.7%, 15.9%);
-  --input: hsl(240, 3.7%, 15.9%);
-  --primary: hsl(214, 84%, 56%);
-  --primary-foreground: hsl(211, 100%, 99%);
-  --secondary: hsl(240, 3.7%, 15.9%);
-  --secondary-foreground: hsl(0, 0%, 98%);
-  --accent: hsl(142, 71%, 45%);
-  --accent-foreground: hsl(0, 0%, 98%);
-  --destructive: hsl(0, 62.8%, 30.6%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(240, 4.9%, 83.9%);
-  --radius: 0.5rem;
+  --background: hsl(0, 0%, 0%);
+  --foreground: hsl(0, 0%, 100%);
+  --muted: hsl(0, 0%, 4%);
+  --muted-foreground: hsl(0, 0%, 60%);
+  --popover: hsl(0, 0%, 0%);
+  --popover-foreground: hsl(0, 0%, 100%);
+  --card: hsl(0, 0%, 0%);
+  --card-foreground: hsl(0, 0%, 100%);
+  --border: hsl(0, 0%, 10%);
+  --input: hsl(0, 0%, 6%);
+  --primary: hsl(0, 0%, 100%);
+  --primary-foreground: hsl(0, 0%, 0%);
+  --secondary: hsl(0, 0%, 6%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(0, 0%, 6%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 0%, 100%);
+  --destructive-foreground: hsl(0, 0%, 0%);
+  --ring: hsl(0, 0%, 100%);
+  --radius: 0rem;
 }
 
 @layer base {
@@ -59,34 +61,99 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
+    @apply font-mono antialiased bg-background text-foreground;
+    font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-weight: 300;
+    letter-spacing: -0.01em;
   }
 
-  .hero-pattern {
-    background-image: radial-gradient(circle at 2px 2px, rgba(37,99,235,0.1) 1px, transparent 0);
-    background-size: 40px 40px;
+  /* Nothing OS dotted patterns */
+  .nothing-dots {
+    background-image: radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0);
+    background-size: 8px 8px;
+    opacity: 0.1;
   }
 
-  .interview-active {
-    animation: pulse 2s infinite;
+  .nothing-grid {
+    background-image: 
+      linear-gradient(currentColor 1px, transparent 1px),
+      linear-gradient(90deg, currentColor 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.05;
   }
 
-  .assistance-panel {
-    backdrop-filter: blur(10px);
-    background-color: rgba(255, 255, 255, 0.95);
+  /* Minimal animations */
+  .nothing-pulse {
+    animation: nothing-pulse 3s ease-in-out infinite;
   }
 
-  .dark .assistance-panel {
-    background-color: rgba(15, 23, 42, 0.95);
+  .nothing-fade-in {
+    animation: nothing-fade-in 0.3s ease-out;
+  }
+
+  .nothing-border {
+    border: 1px solid currentColor;
+    border-opacity: 0.1;
+  }
+
+  /* Typography */
+  h1, h2, h3 {
+    font-weight: 300;
+    letter-spacing: -0.02em;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 1px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: currentColor;
+    opacity: 0.2;
+  }
+
+  /* Form inputs */
+  input, textarea, select {
+    font-family: inherit;
+    font-weight: 300;
+  }
+
+  /* Buttons */
+  button {
+    font-family: inherit;
+    font-weight: 400;
+    transition: all 0.15s ease;
+  }
+
+  /* Cards */
+  .nothing-card {
+    border: 1px solid currentColor;
+    border-opacity: 0.08;
+    background: transparent;
+    backdrop-filter: blur(20px);
   }
 }
 
-@keyframes pulse {
+@keyframes nothing-pulse {
   0%, 100% { 
     opacity: 1; 
   }
   50% { 
-    opacity: 0.8; 
+    opacity: 0.6; 
+  }
+}
+
+@keyframes nothing-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

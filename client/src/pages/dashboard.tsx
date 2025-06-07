@@ -29,127 +29,117 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white nothing-grid">
       {/* Header */}
-      <header className="bg-surface shadow-sm border-b border-border sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-foreground">Horizon</h1>
-                <p className="text-xs text-muted-foreground">Your AI-Powered Career Assistant</p>
-              </div>
+      <header className="nothing-border border-b px-8 py-8">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            <div className="w-4 h-4 nothing-border flex items-center justify-center nothing-fade-in">
+              <div className="w-1 h-1 bg-black rounded-full nothing-pulse"></div>
             </div>
-            <nav className="hidden md:flex items-center space-x-6">
-              <Button variant="ghost" onClick={() => setActiveTab("overview")}>
-                Dashboard
-              </Button>
-              <Button variant="ghost" onClick={() => setActiveTab("practice")}>
-                Practice
-              </Button>
-              <Button variant="ghost" onClick={() => setActiveTab("insights")}>
-                Insights
-              </Button>
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <Crown className="w-4 h-4 mr-2" />
-                Premium
-              </Button>
-            </nav>
+            <h1 className="text-lg font-light tracking-widest">horizon</h1>
+            <div className="nothing-dots w-12 h-px"></div>
+            <span className="text-xs font-light opacity-50 tracking-wide">career.assistant</span>
+          </div>
+          
+          <div className="flex items-center space-x-8">
+            <div className="flex items-center space-x-2 opacity-40">
+              <div className="w-1 h-1 bg-black rounded-full"></div>
+              <span className="text-xs font-light tracking-wide">secure</span>
+            </div>
+            <div className="flex items-center space-x-2 opacity-40">
+              <div className="w-1 h-1 bg-black rounded-full"></div>
+              <span className="text-xs font-light tracking-wide">private</span>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+      <main className="max-w-6xl mx-auto px-8 py-16">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-16">
           
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-8">
+          <TabsContent value="overview" className="space-y-16 nothing-fade-in">
             {/* Welcome Section */}
-            <Card className="relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5" />
-              <CardContent className="relative p-8">
-                <div className="max-w-3xl">
-                  <h2 className="text-3xl font-bold text-foreground mb-4">
-                    Ace your next interview with AI assistance
-                  </h2>
-                  <p className="text-lg text-muted-foreground mb-6">
-                    Upload your resume, get personalized insights, and practice with our AI-powered mock interviews.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Button 
-                      size="lg" 
-                      className="bg-primary text-primary-foreground hover:bg-primary/90"
-                      onClick={() => setActiveTab("resume")}
-                    >
-                      Get Started
-                    </Button>
-                    <Button variant="outline" size="lg">
-                      Watch Demo
-                    </Button>
-                  </div>
+            <div className="nothing-card p-12">
+              <div className="max-w-3xl">
+                <h2 className="text-2xl font-light tracking-wide mb-6">
+                  prepare.interview.succeed
+                </h2>
+                <p className="text-sm font-light opacity-60 mb-8 leading-relaxed">
+                  minimal ai-powered career assistance / upload resume / practice interviews / get real-time guidance
+                </p>
+                <div className="flex space-x-6">
+                  <button
+                    onClick={() => setActiveTab("resume")}
+                    className="nothing-border px-6 py-3 text-xs font-light tracking-wide hover:bg-black hover:text-white transition-all"
+                  >
+                    upload.resume
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("assistant")}
+                    className="px-6 py-3 text-xs font-light tracking-wide opacity-60 hover:opacity-100 transition-all"
+                  >
+                    try.assistant
+                  </button>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Feature Grid */}
-            <div className="grid lg:grid-cols-2 gap-8">
-              <ResumeUpload />
-              <CompanyResearch />
+              </div>
             </div>
 
-            {/* Premium Features */}
-            <Card className="bg-gradient-to-br from-primary/5 via-purple-50 to-accent/5 border-primary/20">
-              <CardContent className="p-8">
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold text-foreground mb-4">Unlock Premium Features</h3>
-                  <p className="text-muted-foreground max-w-2xl mx-auto">
-                    Get advanced AI assistance, detailed feedback, and unlimited practice sessions with Horizon Premium.
-                  </p>
+            {/* Feature Grid */}
+            <div className="grid grid-cols-2 gap-12">
+              <div className="nothing-card p-8">
+                <div className="flex items-center space-x-3 mb-6">
+                  <FileText className="w-4 h-4 opacity-60" />
+                  <h3 className="text-sm font-light tracking-wide">resume.analysis</h3>
                 </div>
-                
-                <div className="grid md:grid-cols-3 gap-6 mb-8">
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                      <Zap className="w-6 h-6 text-primary" />
-                    </div>
-                    <h4 className="font-semibold text-foreground mb-2">Advanced AI Feedback</h4>
-                    <p className="text-muted-foreground text-sm">
-                      Get detailed analysis of your communication style, body language, and interview performance.
-                    </p>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                      <Unlock className="w-6 h-6 text-accent" />
-                    </div>
-                    <h4 className="font-semibold text-foreground mb-2">Unlimited Practice</h4>
-                    <p className="text-muted-foreground text-sm">
-                      Practice with unlimited mock interviews tailored to your target companies and roles.
-                    </p>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                      <Shield className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <h4 className="font-semibold text-foreground mb-2">Privacy Focused</h4>
-                    <p className="text-muted-foreground text-sm">
-                      Local AI processing option ensures your interview data stays private and secure on your device.
-                    </p>
-                  </div>
+                <p className="text-xs font-light opacity-50 mb-6 leading-relaxed">
+                  ai-powered parsing / skill extraction / experience mapping
+                </p>
+                <button 
+                  onClick={() => setActiveTab("resume")}
+                  className="text-xs font-light tracking-wide opacity-60 hover:opacity-100 transition-all"
+                >
+                  upload →
+                </button>
+              </div>
+
+              <div className="nothing-card p-8">
+                <div className="flex items-center space-x-3 mb-6">
+                  <Building2 className="w-4 h-4 opacity-60" />
+                  <h3 className="text-sm font-light tracking-wide">company.research</h3>
                 </div>
-                
-                <div className="text-center">
-                  <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                    Upgrade to Premium - $9.99/month
-                  </Button>
-                  <p className="text-muted-foreground text-sm mt-2">7-day free trial • Cancel anytime</p>
-                </div>
-              </CardContent>
-            </Card>
+                <p className="text-xs font-light opacity-50 mb-6 leading-relaxed">
+                  culture insights / mission analysis / role requirements
+                </p>
+                <button 
+                  onClick={() => setActiveTab("research")}
+                  className="text-xs font-light tracking-wide opacity-60 hover:opacity-100 transition-all"
+                >
+                  research →
+                </button>
+              </div>
+            </div>
+
+            {/* Status Grid */}
+            <div className="grid grid-cols-4 gap-8">
+              <div className="text-center">
+                <div className="w-2 h-2 bg-black rounded-full mx-auto mb-3 nothing-pulse"></div>
+                <p className="text-xs font-light opacity-40 tracking-wide">providers.ready</p>
+              </div>
+              <div className="text-center">
+                <div className="w-2 h-2 border border-black rounded-full mx-auto mb-3"></div>
+                <p className="text-xs font-light opacity-40 tracking-wide">resume.pending</p>
+              </div>
+              <div className="text-center">
+                <div className="w-2 h-2 border border-black rounded-full mx-auto mb-3"></div>
+                <p className="text-xs font-light opacity-40 tracking-wide">practice.available</p>
+              </div>
+              <div className="text-center">
+                <div className="w-2 h-2 border border-black rounded-full mx-auto mb-3"></div>
+                <p className="text-xs font-light opacity-40 tracking-wide">assistant.standby</p>
+              </div>
+            </div>
           </TabsContent>
 
           {/* Resume Tab */}
