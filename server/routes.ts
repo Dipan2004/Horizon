@@ -186,27 +186,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get user's resume for context
       const resume = await storage.getResumeByUserId(userId);
       
-      // Generate interview questions using OpenAI
-      const questionsResponse = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert interviewer. Generate a set of 10 relevant interview questions based on the candidate's resume, company, and position. Return a JSON object with 'questions' array, where each question has 'id', 'text', 'type' (behavioral, technical, situational), and 'difficulty' (easy, medium, hard)."
-          },
-          {
-            role: "user",
-            content: `Generate interview questions for:
-            Company: ${companyName}
-            Position: ${position}
-            Candidate Skills: ${resume?.skills?.join(', ') || 'General skills'}
-            Experience: ${resume?.experience || 'Entry level'}`
-          }
-        ],
-        response_format: { type: "json_object" }
-      });
-
-      const questionData = JSON.parse(questionsResponse.choices[0].message.content || '{}');
+      // Generate interview questions using Universal AI Provider
+      const questionData = await globalAIProvider.generateInterviewQuestions(
+        companyName,
+        position,
+        resume?.skills || [],
+        resume?.experience || 'Entry level'
+      );
       
       const sessionData = {
         userId,
@@ -239,25 +225,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Interview session not found' });
       }
 
-      // Get feedback from OpenAI
-      const feedbackResponse = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          {
-            role: "system",
-            content: "You are an interview coach. Analyze the candidate's response and provide constructive feedback. Return a JSON object with 'score' (1-10), 'strengths' (array), 'improvements' (array), and 'suggestion' (string)."
-          },
-          {
-            role: "user",
-            content: `Evaluate this interview response:
-            Question: ${session.questions?.find((q: any) => q.id === questionId)?.text || 'Unknown question'}
-            Response: ${response}`
-          }
-        ],
-        response_format: { type: "json_object" }
-      });
-
-      const feedback = JSON.parse(feedbackResponse.choices[0].message.content || '{}');
+      // Get feedback from Universal AI Provider
+      const questionText = Array.isArray(session.questions) 
+        ? session.questions.find((q: any) => q.id === questionId)?.text || 'Unknown question'
+        : 'Unknown question';
+      
+      const feedback = await globalAIProvider.evaluateResponse(questionText, response);
       
       // Update session with response and feedback
       const updatedResponses = [...(session.responses as any[] || []), {
@@ -283,25 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { context, conversation, userProfile } = req.body;
       
-      const suggestionResponse = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          {
-            role: "system",
-            content: "You are a real-time interview assistant. Provide helpful suggestions, talking points, and follow-up questions based on the conversation context. Return a JSON object with 'keyPoints' (array), 'followUpSuggestions' (array), 'communicationTips' (array), and 'relevantAchievements' (array)."
-          },
-          {
-            role: "user",
-            content: `Provide real-time assistance for this interview conversation:
-            Context: ${context}
-            Recent conversation: ${conversation}
-            User background: ${JSON.stringify(userProfile)}`
-          }
-        ],
-        response_format: { type: "json_object" }
-      });
-
-      const suggestions = JSON.parse(suggestionResponse.choices[0].message.content || '{}');
+      const suggestions = await globalAIProvider.generateSuggestions(context, conversation, userProfile);
       
       res.json(suggestions);
     } catch (error) {
