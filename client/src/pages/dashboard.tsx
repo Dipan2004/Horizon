@@ -21,6 +21,8 @@ import ResumeUpload from "@/components/resume-upload";
 import CompanyResearch from "@/components/company-research";
 import MockInterview from "@/components/mock-interview";
 import RealTimeAssistant from "@/components/real-time-assistant";
+import APIKeyManager from "@/components/api-key-manager";
+import RealtimeAssistant from "@/components/realtime-assistant";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -166,10 +168,15 @@ export default function Dashboard() {
 
           {/* Real-time Assistant Tab */}
           <TabsContent value="assistant">
-            <RealTimeAssistant />
+            <RealtimeAssistant />
           </TabsContent>
 
-          <TabsList className="grid grid-cols-5 w-full max-w-2xl mx-auto">
+          {/* API Keys Tab */}
+          <TabsContent value="settings">
+            <APIKeyManager />
+          </TabsContent>
+
+          <TabsList className="grid grid-cols-6 w-full max-w-3xl mx-auto">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Overview</span>
@@ -188,7 +195,11 @@ export default function Dashboard() {
             </TabsTrigger>
             <TabsTrigger value="assistant" className="flex items-center gap-2">
               <Headphones className="w-4 h-4" />
-              <span className="hidden sm:inline">Assistant</span>
+              <span className="hidden sm:inline">Live Assistant</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Crown className="w-4 h-4" />
+              <span className="hidden sm:inline">AI Keys</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>
