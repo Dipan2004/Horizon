@@ -100,7 +100,7 @@ export default function APIKeyManager() {
     addKeyMutation.mutate({ provider: selectedProvider, key: apiKey.trim() });
   };
 
-  const availableProviders = providersData?.providers || [];
+  const availableProviders = (providersData as any)?.providers || [];
 
   return (
     <Card className="bg-white border border-gray-200">

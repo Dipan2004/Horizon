@@ -87,6 +87,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to get available providers' });
     }
   });
+
+  // Real-time assistant suggestions
+  app.post('/api/assistant/suggest', async (req, res) => {
+    try {
+      const { context, conversation, userProfile } = req.body;
+      
+      const suggestions = await globalAIProvider.generateSuggestions(context, conversation, userProfile);
+      res.json(suggestions);
+    } catch (error) {
+      console.error('Assistant suggestions error:', error);
+      res.status(500).json({ error: 'Failed to generate suggestions' });
+    }
+  });
   
   // Resume upload and analysis
   app.post('/api/resume/upload', upload.single('resume'), async (req, res) => {

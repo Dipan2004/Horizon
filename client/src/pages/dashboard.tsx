@@ -15,7 +15,8 @@ import {
   AlertCircle,
   Zap,
   Shield,
-  Unlock
+  Unlock,
+  Key
 } from "lucide-react";
 import ResumeUpload from "@/components/resume-upload";
 import CompanyResearch from "@/components/company-research";
@@ -198,7 +199,7 @@ export default function Dashboard() {
               <span className="hidden sm:inline">Live Assistant</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Crown className="w-4 h-4" />
+              <Key className="w-4 h-4" />
               <span className="hidden sm:inline">AI Keys</span>
             </TabsTrigger>
           </TabsList>
