@@ -1,13 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertResumeSchema, insertCompanyInsightsSchema, insertInterviewSessionSchema } from "@shared/schema";
-import OpenAI from "openai";
+import { insertResumeSchema, insertCompanyInsightsSchema, insertInterviewSessionSchema, insertUserSchema } from "@shared/schema";
+import { createAIProvider, UniversalAIProvider } from "./ai-service";
 import multer from "multer";
-
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || ""
-});
 
 // Configure multer for file uploads
 const upload = multer({ 
@@ -15,7 +11,82 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
+// Global AI provider instance
+let globalAIProvider = createAIProvider();
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // API Key Management
+  app.post('/api/user/api-keys', async (req, res) => {
+    try {
+      const { userId, provider, apiKey } = req.body;
+      
+      if (!userId || !provider || !apiKey) {
+        return res.status(400).json({ error: 'userId, provider, and apiKey are required' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Update user's API keys
+      const updateData: any = {};
+      switch (provider.toLowerCase()) {
+        case 'openai':
+          updateData.openaiApiKey = apiKey;
+          break;
+        case 'anthropic':
+          updateData.anthropicApiKey = apiKey;
+          break;
+        case 'huggingface':
+          updateData.huggingfaceApiKey = apiKey;
+          break;
+        default:
+          return res.status(400).json({ error: 'Unsupported provider' });
+      }
+
+      // Update the global AI provider with new keys
+      if (globalAIProvider instanceof UniversalAIProvider) {
+        globalAIProvider.addProvider(provider, apiKey);
+      }
+
+      res.json({ message: 'API key updated successfully', provider });
+    } catch (error) {
+      console.error('API key update error:', error);
+      res.status(500).json({ error: 'Failed to update API key' });
+    }
+  });
+
+  app.delete('/api/user/api-keys/:provider', async (req, res) => {
+    try {
+      const { provider } = req.params;
+      const { userId } = req.body;
+
+      if (globalAIProvider instanceof UniversalAIProvider) {
+        globalAIProvider.removeProvider(provider);
+      }
+
+      res.json({ message: 'API key removed successfully', provider });
+    } catch (error) {
+      console.error('API key removal error:', error);
+      res.status(500).json({ error: 'Failed to remove API key' });
+    }
+  });
+
+  app.get('/api/user/available-providers', async (req, res) => {
+    try {
+      if (globalAIProvider instanceof UniversalAIProvider) {
+        const providers = globalAIProvider.getAvailableProviders();
+        res.json({ providers, fallback: 'huggingface' });
+      } else {
+        res.json({ providers: [], fallback: 'huggingface' });
+      }
+    } catch (error) {
+      console.error('Get providers error:', error);
+      res.status(500).json({ error: 'Failed to get available providers' });
+    }
+  });
   
   // Resume upload and analysis
   app.post('/api/resume/upload', upload.single('resume'), async (req, res) => {
@@ -27,23 +98,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fs = await import('fs');
       const fileContent = fs.readFileSync(req.file.path, 'utf-8');
       
-      // Extract skills and experience using OpenAI
-      const analysisResponse = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          {
-            role: "system",
-            content: "You are a resume analysis expert. Extract skills, experience summary, and key achievements from the resume text. Return a JSON object with 'skills' (array of strings), 'experience' (string summary), and 'achievements' (array of strings)."
-          },
-          {
-            role: "user",
-            content: `Analyze this resume content and extract key information:\n\n${fileContent}`
-          }
-        ],
-        response_format: { type: "json_object" }
-      });
-
-      const analysis = JSON.parse(analysisResponse.choices[0].message.content || '{}');
+      // Extract skills and experience using Universal AI Provider
+      const analysis = await globalAIProvider.analyzeResume(fileContent);
       
       const resumeData = {
         userId: 1, // For demo purposes, using user ID 1
@@ -99,23 +155,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(existing);
       }
 
-      // Generate insights using OpenAI
-      const researchResponse = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          {
-            role: "system",
-            content: "You are a career research expert. Provide company insights including culture, mission, recent news, and required skills for a specific position. Return a JSON object with 'culture', 'mission', 'recentNews', 'requiredSkills' (array), and 'additionalInsights' fields."
-          },
-          {
-            role: "user",
-            content: `Research ${companyName} for the position of ${position}. Provide insights about company culture, mission, recent developments, and key skills required for this role.`
-          }
-        ],
-        response_format: { type: "json_object" }
-      });
-
-      const research = JSON.parse(researchResponse.choices[0].message.content || '{}');
+      // Generate insights using Universal AI Provider
+      const research = await globalAIProvider.researchCompany(companyName, position);
       
       const insightsData = {
         companyName,

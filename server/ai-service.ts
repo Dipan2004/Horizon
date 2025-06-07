@@ -480,12 +480,16 @@ Format: {"skills": ["skill1", "skill2"], "experience": "summary", "achievements"
     });
 
     try {
-      const analysis = JSON.parse(response.content[0].text);
-      return {
-        skills: analysis.skills || [],
-        experience: analysis.experience || '',
-        achievements: analysis.achievements || []
-      };
+      const textContent = response.content.find(block => block.type === 'text');
+      if (textContent && 'text' in textContent) {
+        const analysis = JSON.parse(textContent.text);
+        return {
+          skills: analysis.skills || [],
+          experience: analysis.experience || '',
+          achievements: analysis.achievements || []
+        };
+      }
+      throw new Error('No text content found');
     } catch {
       return {
         skills: this.extractSkillsFromText(content),
@@ -510,13 +514,17 @@ Return JSON format: {"culture": "...", "mission": "...", "recentNews": "...", "r
     });
 
     try {
-      const research = JSON.parse(response.content[0].text);
-      return {
-        culture: research.culture || `${companyName} fosters innovation and collaboration`,
-        mission: research.mission || `${companyName} is committed to excellence`,
-        recentNews: research.recentNews || `${companyName} continues to grow`,
-        requiredSkills: research.requiredSkills || this.getDefaultSkillsForPosition(position)
-      };
+      const textContent = response.content.find(block => block.type === 'text');
+      if (textContent && 'text' in textContent) {
+        const research = JSON.parse(textContent.text);
+        return {
+          culture: research.culture || `${companyName} fosters innovation and collaboration`,
+          mission: research.mission || `${companyName} is committed to excellence`,
+          recentNews: research.recentNews || `${companyName} continues to grow`,
+          requiredSkills: research.requiredSkills || this.getDefaultSkillsForPosition(position)
+        };
+      }
+      throw new Error('No text content found');
     } catch {
       return {
         culture: `${companyName} values teamwork and innovation`,
@@ -546,8 +554,12 @@ Return JSON: {"questions": [{"id": "q1", "text": "...", "type": "behavioral|tech
     });
 
     try {
-      const questionData = JSON.parse(response.content[0].text);
-      return { questions: questionData.questions || [] };
+      const textContent = response.content.find(block => block.type === 'text');
+      if (textContent && 'text' in textContent) {
+        const questionData = JSON.parse(textContent.text);
+        return { questions: questionData.questions || [] };
+      }
+      throw new Error('No text content found');
     } catch {
       return this.getDefaultQuestions(companyName, position, userSkills);
     }
@@ -570,7 +582,11 @@ Return JSON: {"score": 1-10, "strengths": ["strength1"], "improvements": ["impro
     });
 
     try {
-      return JSON.parse(feedbackResponse.content[0].text);
+      const textContent = feedbackResponse.content.find(block => block.type === 'text');
+      if (textContent && 'text' in textContent) {
+        return JSON.parse(textContent.text);
+      }
+      throw new Error('No text content found');
     } catch {
       return this.getBasicFeedback(response);
     }
@@ -594,7 +610,11 @@ Return JSON: {"keyPoints": ["point1"], "followUpSuggestions": ["suggestion1"], "
     });
 
     try {
-      return JSON.parse(suggestionResponse.content[0].text);
+      const textContent = suggestionResponse.content.find(block => block.type === 'text');
+      if (textContent && 'text' in textContent) {
+        return JSON.parse(textContent.text);
+      }
+      throw new Error('No text content found');
     } catch {
       return this.getBasicSuggestions(userProfile);
     }

@@ -130,7 +130,16 @@ export class MemStorage implements IStorage {
 
   async createInterviewSession(insertSession: InsertInterviewSession): Promise<InterviewSession> {
     const id = this.currentSessionId++;
-    const session: InterviewSession = { ...insertSession, id };
+    const session: InterviewSession = { 
+      ...insertSession, 
+      id,
+      companyName: insertSession.companyName || null,
+      position: insertSession.position || null,
+      questions: insertSession.questions || null,
+      responses: insertSession.responses || null,
+      feedback: insertSession.feedback || null,
+      completed: insertSession.completed || false
+    };
     this.interviewSessionsList.set(id, session);
     return session;
   }
