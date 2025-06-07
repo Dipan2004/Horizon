@@ -5,31 +5,31 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(0, 0%, 100%);
-  --foreground: hsl(0, 0%, 0%);
-  --muted: hsl(0, 0%, 98%);
-  --muted-foreground: hsl(0, 0%, 45%);
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(0, 0%, 0%);
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(0, 0%, 0%);
-  --border: hsl(0, 0%, 92%);
-  --input: hsl(0, 0%, 96%);
-  --primary: hsl(0, 0%, 0%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(0, 0%, 96%);
-  --secondary-foreground: hsl(0, 0%, 0%);
-  --accent: hsl(0, 0%, 96%);
-  --accent-foreground: hsl(0, 0%, 0%);
-  --destructive: hsl(0, 0%, 0%);
+  --background: hsl(0, 0%, 0%);
+  --foreground: hsl(0, 0%, 100%);
+  --muted: hsl(0, 0%, 5%);
+  --muted-foreground: hsl(0, 0%, 70%);
+  --popover: hsl(0, 0%, 0%);
+  --popover-foreground: hsl(0, 0%, 100%);
+  --card: hsl(0, 0%, 0%);
+  --card-foreground: hsl(0, 0%, 100%);
+  --border: hsl(0, 0%, 15%);
+  --input: hsl(0, 0%, 8%);
+  --primary: hsl(0, 84%, 60%);
+  --primary-foreground: hsl(0, 0%, 0%);
+  --secondary: hsl(0, 0%, 8%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(0, 0%, 8%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(0, 0%, 100%);
-  --ring: hsl(0, 0%, 0%);
+  --ring: hsl(0, 84%, 60%);
   --radius: 0rem;
-  --chart-1: hsl(0, 0%, 20%);
-  --chart-2: hsl(0, 0%, 40%);
-  --chart-3: hsl(0, 0%, 60%);
-  --chart-4: hsl(0, 0%, 80%);
-  --chart-5: hsl(0, 0%, 90%);
+  --chart-1: hsl(0, 0%, 80%);
+  --chart-2: hsl(0, 0%, 60%);
+  --chart-3: hsl(0, 0%, 40%);
+  --chart-4: hsl(0, 0%, 20%);
+  --chart-5: hsl(0, 0%, 10%);
 }
 
 .dark {
@@ -69,17 +69,15 @@
 
   /* Nothing OS dotted patterns */
   .nothing-dots {
-    background-image: radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0);
+    background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.1) 1px, transparent 0);
     background-size: 8px 8px;
-    opacity: 0.1;
   }
 
   .nothing-grid {
     background-image: 
-      linear-gradient(currentColor 1px, transparent 1px),
-      linear-gradient(90deg, currentColor 1px, transparent 1px);
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
     background-size: 20px 20px;
-    opacity: 0.05;
   }
 
   /* Minimal animations */

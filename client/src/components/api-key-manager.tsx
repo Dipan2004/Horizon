@@ -103,38 +103,36 @@ export default function APIKeyManager() {
   const availableProviders = (providersData as any)?.providers || [];
 
   return (
-    <Card className="bg-white border border-gray-200">
-      <CardContent className="p-6">
-        <div className="flex items-center space-x-2 mb-6">
-          <Key className="w-5 h-5 text-gray-600" />
-          <h3 className="text-lg font-medium text-gray-900">AI Providers</h3>
+    <div className="border border-white/10 bg-black/40 backdrop-blur-sm">
+      <div className="p-8">
+        <div className="flex items-center space-x-3 mb-8">
+          <Key className="w-4 h-4 text-white/60" />
+          <h3 className="text-sm font-light tracking-wide text-white">ai.providers</h3>
         </div>
 
         {/* Connected Providers */}
         {availableProviders.length > 0 && (
-          <div className="mb-6">
-            <p className="text-sm text-gray-600 mb-3">Connected</p>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="mb-8">
+            <p className="text-xs font-light text-white/50 mb-4 tracking-wide">connected</p>
+            <div className="grid grid-cols-2 gap-3">
               {availableProviders.map((providerId: string) => {
                 const provider = AI_PROVIDERS.find(p => p.id === providerId);
                 if (!provider) return null;
                 
                 return (
-                  <div key={providerId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">{provider.icon}</span>
-                      <span className="text-sm font-medium text-gray-900">{provider.name}</span>
-                      <Badge className={provider.color}>Active</Badge>
+                  <div key={providerId} className="flex items-center justify-between p-4 border border-white/10 bg-black/20">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-sm">{provider.icon}</span>
+                      <span className="text-xs font-light text-white tracking-wide">{provider.name.toLowerCase()}</span>
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                    <button
                       onClick={() => removeKeyMutation.mutate(providerId)}
                       disabled={removeKeyMutation.isPending}
-                      className="text-gray-400 hover:text-red-600"
+                      className="text-white/40 hover:text-red-500 transition-all"
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                      <Trash2 className="w-3 h-3" />
+                    </button>
                   </div>
                 );
               })}
@@ -143,67 +141,66 @@ export default function APIKeyManager() {
         )}
 
         {/* Add New Provider */}
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600">Add New Provider</p>
+        <div className="space-y-6">
+          <p className="text-xs font-light text-white/50 tracking-wide">add.provider</p>
           
           {/* Provider Selection */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             {AI_PROVIDERS.filter(p => !availableProviders.includes(p.id)).map((provider) => (
               <button
                 key={provider.id}
                 onClick={() => setSelectedProvider(provider.id)}
-                className={`flex items-center space-x-2 p-3 border rounded-lg transition-colors ${
+                className={`flex items-center space-x-3 p-4 border transition-all ${
                   selectedProvider === provider.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-red-500 bg-red-500/10'
+                    : 'border-white/10 hover:border-white/20'
                 }`}
               >
-                <span className="text-lg">{provider.icon}</span>
-                <span className="text-sm font-medium text-gray-900">{provider.name}</span>
+                <span className="text-sm">{provider.icon}</span>
+                <span className="text-xs font-light text-white tracking-wide">{provider.name.toLowerCase()}</span>
               </button>
             ))}
           </div>
 
           {/* API Key Input */}
           {selectedProvider && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="relative">
                 <Input
                   type={showKey ? "text" : "password"}
-                  placeholder="Enter your API key"
+                  placeholder="enter.api.key"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  className="pr-10"
+                  className="bg-black/40 border-white/10 text-white placeholder:text-white/30 pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowKey(!showKey)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-white/40 hover:text-white/60"
                 >
-                  {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                 </button>
               </div>
               
-              <Button
+              <button
                 onClick={handleAddKey}
                 disabled={addKeyMutation.isPending || !apiKey.trim()}
-                className="w-full bg-gray-900 text-white hover:bg-gray-800"
+                className="w-full bg-red-500 text-black px-4 py-3 text-xs font-medium tracking-wide hover:bg-red-400 transition-all disabled:opacity-50"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                {addKeyMutation.isPending ? 'Adding...' : 'Add Provider'}
-              </Button>
+                <Plus className="w-3 h-3 mr-2 inline" />
+                {addKeyMutation.isPending ? 'adding...' : 'add.provider'}
+              </button>
             </div>
           )}
         </div>
 
         {/* Info */}
-        <div className="mt-6 p-3 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-600">
-            Your API keys are stored securely and only used for your requests. 
-            Free tier: Hugging Face (no key required). Premium: OpenAI, Claude, Gemini.
+        <div className="mt-8 p-4 border border-white/10 bg-black/20">
+          <p className="text-xs font-light text-white/40 leading-relaxed">
+            keys.stored.securely / free.tier.huggingface / premium.openai.claude.gemini
           </p>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
