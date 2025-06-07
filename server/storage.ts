@@ -68,14 +68,26 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      openaiApiKey: insertUser.openaiApiKey || null,
+      huggingfaceApiKey: insertUser.huggingfaceApiKey || null,
+      preferredAiProvider: insertUser.preferredAiProvider || 'huggingface'
+    };
     this.users.set(id, user);
     return user;
   }
 
   async createResume(insertResume: InsertResume): Promise<Resume> {
     const id = this.currentResumeId++;
-    const resume: Resume = { ...insertResume, id };
+    const resume: Resume = { 
+      ...insertResume, 
+      id,
+      skills: insertResume.skills || null,
+      experience: insertResume.experience || null,
+      achievements: insertResume.achievements || null
+    };
     this.resumes.set(id, resume);
     return resume;
   }
@@ -97,7 +109,15 @@ export class MemStorage implements IStorage {
 
   async createCompanyInsights(insertInsights: InsertCompanyInsights): Promise<CompanyInsights> {
     const id = this.currentCompanyInsightsId++;
-    const insights: CompanyInsights = { ...insertInsights, id };
+    const insights: CompanyInsights = { 
+      ...insertInsights, 
+      id,
+      culture: insertInsights.culture || null,
+      mission: insertInsights.mission || null,
+      recentNews: insertInsights.recentNews || null,
+      requiredSkills: insertInsights.requiredSkills || null,
+      insights: insertInsights.insights || null
+    };
     const key = `${insertInsights.companyName}-${insertInsights.position}`;
     this.companyInsightsList.set(key, insights);
     return insights;

@@ -6,6 +6,9 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  openaiApiKey: text("openai_api_key"),
+  huggingfaceApiKey: text("huggingface_api_key"),
+  preferredAiProvider: text("preferred_ai_provider").default("huggingface"), // "openai" or "huggingface"
 });
 
 export const resumes = pgTable("resumes", {
@@ -43,6 +46,9 @@ export const interviewSessions = pgTable("interview_sessions", {
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  openaiApiKey: true,
+  huggingfaceApiKey: true,
+  preferredAiProvider: true,
 });
 
 export const insertResumeSchema = createInsertSchema(resumes).omit({
