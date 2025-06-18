@@ -1,22 +1,28 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertResumeSchema, insertCompanyInsightsSchema, insertInterviewSessionSchema, insertUserSchema } from "@shared/schema";
 import { createAIProvider, UniversalAIProvider } from "./ai-service";
 import multer from "multer";
 
-// Configure multer for file uploads
+
+interface MulterRequest extends Request {
+  file?: Express.Multer.File;
+}
+
+
 const upload = multer({ 
   dest: 'uploads/',
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  limits: { fileSize: 10 * 1024 * 1024 } // 10 MB limit
+
 });
 
-// Global AI provider instance
+
 let globalAIProvider = createAIProvider();
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // API Key Management
+  
   app.post('/api/user/api-keys', async (req, res) => {
     try {
       const { userId, provider, apiKey } = req.body;
@@ -30,23 +36,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      // Update user's API keys
+      
       const updateData: any = {};
       switch (provider.toLowerCase()) {
-        case 'openai':
-          updateData.openaiApiKey = apiKey;
-          break;
-        case 'anthropic':
-          updateData.anthropicApiKey = apiKey;
-          break;
         case 'huggingface':
           updateData.huggingfaceApiKey = apiKey;
           break;
+        case 'gemini':
+          updateData.geminiApiKey = apiKey;
+          break;
         default:
-          return res.status(400).json({ error: 'Unsupported provider' });
+          return res.status(400).json({ 
+            error: 'Unsupported provider. Only HuggingFace and Gemini are supported.' 
+          });
       }
 
-      // Update the global AI provider with new keys
+      
       if (globalAIProvider instanceof UniversalAIProvider) {
         globalAIProvider.addProvider(provider, apiKey);
       }
@@ -63,6 +68,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { provider } = req.params;
       const { userId } = req.body;
 
+      
+      if (!['huggingface', 'gemini'].includes(provider.toLowerCase())) {
+        return res.status(400).json({ 
+          error: 'Unsupported provider. Only HuggingFace and Gemini are supported.' 
+        });
+      }
+
       if (globalAIProvider instanceof UniversalAIProvider) {
         globalAIProvider.removeProvider(provider);
       }
@@ -78,9 +90,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       if (globalAIProvider instanceof UniversalAIProvider) {
         const providers = globalAIProvider.getAvailableProviders();
-        res.json({ providers, fallback: 'huggingface' });
+        res.json({ 
+          providers, 
+          fallback: 'huggingface',
+          supported: ['huggingface', 'gemini']
+        });
       } else {
-        res.json({ providers: [], fallback: 'huggingface' });
+        res.json({ 
+          providers: [], 
+          fallback: 'huggingface',
+          supported: ['huggingface', 'gemini']
+        });
       }
     } catch (error) {
       console.error('Get providers error:', error);
@@ -88,7 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Real-time assistant suggestions
+  
   app.post('/api/assistant/suggest', async (req, res) => {
     try {
       const { context, conversation, userProfile } = req.body;
@@ -101,8 +121,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Resume upload and analysis
-  app.post('/api/resume/upload', upload.single('resume'), async (req, res) => {
+  
+  app.post('/api/resume/upload', upload.single('resume'), async (req: MulterRequest, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
@@ -111,7 +131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fs = await import('fs');
       const fileContent = fs.readFileSync(req.file.path, 'utf-8');
       
-      // Extract skills and experience using Universal AI Provider
+      
       const analysis = await globalAIProvider.analyzeResume(fileContent);
       
       const resumeData = {
@@ -126,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertResumeSchema.parse(resumeData);
       const resume = await storage.createResume(validatedData);
       
-      // Clean up uploaded file
+      
       fs.unlinkSync(req.file.path);
       
       res.json(resume);
@@ -168,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(existing);
       }
 
-      // Generate insights using Universal AI Provider
+      
       const research = await globalAIProvider.researchCompany(companyName, position);
       
       const insightsData = {
@@ -196,10 +216,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId, companyName, position, resumeId } = req.body;
       
-      // Get user's resume for context
+      
       const resume = await storage.getResumeByUserId(userId);
       
-      // Generate interview questions using Universal AI Provider
+      
       const questionData = await globalAIProvider.generateInterviewQuestions(
         companyName,
         position,
@@ -227,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Submit interview response
+  
   app.post('/api/interview/:sessionId/response', async (req, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
@@ -238,14 +258,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Interview session not found' });
       }
 
-      // Get feedback from Universal AI Provider
+      
       const questionText = Array.isArray(session.questions) 
         ? session.questions.find((q: any) => q.id === questionId)?.text || 'Unknown question'
         : 'Unknown question';
       
       const feedback = await globalAIProvider.evaluateResponse(questionText, response);
       
-      // Update session with response and feedback
+      
       const updatedResponses = [...(session.responses as any[] || []), {
         questionId,
         response,
@@ -264,21 +284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Real-time assistance
-  app.post('/api/assistant/suggest', async (req, res) => {
-    try {
-      const { context, conversation, userProfile } = req.body;
-      
-      const suggestions = await globalAIProvider.generateSuggestions(context, conversation, userProfile);
-      
-      res.json(suggestions);
-    } catch (error) {
-      console.error('Real-time assistance error:', error);
-      res.status(500).json({ error: 'Failed to generate suggestions' });
-    }
-  });
-
-  // Get interview sessions for user
+  
   app.get('/api/interview/sessions/:userId', async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
@@ -287,6 +293,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Get sessions error:', error);
       res.status(500).json({ error: 'Failed to fetch interview sessions' });
+    }
+  });
+
+  
+  app.get('/api/interview/session/:sessionId', async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const session = await storage.getInterviewSession(sessionId);
+      
+      if (!session) {
+        return res.status(404).json({ error: 'Interview session not found' });
+      }
+      
+      res.json(session);
+    } catch (error) {
+      console.error('Get session error:', error);
+      res.status(500).json({ error: 'Failed to fetch interview session' });
+    }
+  });
+
+  
+  app.post('/api/interview/:sessionId/complete', async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      
+      const session = await storage.getInterviewSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: 'Interview session not found' });
+      }
+
+      const updatedSession = await storage.updateInterviewSession(sessionId, {
+        completed: true
+      });
+      
+      res.json(updatedSession);
+    } catch (error) {
+      console.error('Complete session error:', error);
+      res.status(500).json({ error: 'Failed to complete interview session' });
+    }
+  });
+
+  // Health check endpoint
+  app.get('/api/health', async (req, res) => {
+    try {
+      const providers = globalAIProvider instanceof UniversalAIProvider 
+        ? globalAIProvider.getAvailableProviders()
+        : [];
+      
+      res.json({ 
+        status: 'healthy', 
+        providers,
+        supportedProviders: ['huggingface', 'gemini'],
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Health check error:', error);
+      res.status(500).json({ error: 'Health check failed' });
     }
   });
 

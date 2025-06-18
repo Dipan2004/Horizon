@@ -1,6 +1,4 @@
 import { HfInference } from '@huggingface/inference';
-import OpenAI from 'openai';
-import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export interface AIProvider {
@@ -45,7 +43,7 @@ export class HuggingFaceProvider implements AIProvider {
   private hf: HfInference;
   
   constructor(apiKey?: string) {
-    // Use free inference API if no key provided
+    
     this.hf = new HfInference(apiKey);
   }
   
@@ -72,7 +70,7 @@ Format: {"skills": ["skill1", "skill2"], "experience": "summary", "achievements"
         }
       });
       
-      // Parse JSON response or provide fallback
+      
       try {
         const parsed = JSON.parse(response.generated_text.trim());
         return {
@@ -81,7 +79,7 @@ Format: {"skills": ["skill1", "skill2"], "experience": "summary", "achievements"
           achievements: parsed.achievements || []
         };
       } catch {
-        // Fallback parsing if JSON extraction fails
+        
         const text = response.generated_text;
         return {
           skills: this.extractSkillsFromText(content),
@@ -328,366 +326,6 @@ Format as JSON: {"culture": "...", "mission": "...", "recentNews": "...", "requi
   }
 }
 
-export class OpenAIProvider implements AIProvider {
-  private openai: OpenAI;
-  
-  constructor(apiKey: string) {
-    this.openai = new OpenAI({ apiKey });
-  }
-  
-  async analyzeResume(content: string) {
-    const response = await this.openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "You are a resume analysis expert. Extract skills, experience summary, and key achievements from the resume text. Return a JSON object with 'skills' (array of strings), 'experience' (string summary), and 'achievements' (array of strings)."
-        },
-        {
-          role: "user",
-          content: `Analyze this resume content and extract key information:\n\n${content}`
-        }
-      ],
-      response_format: { type: "json_object" }
-    });
-
-    const analysis = JSON.parse(response.choices[0].message.content || '{}');
-    return {
-      skills: analysis.skills || [],
-      experience: analysis.experience || '',
-      achievements: analysis.achievements || []
-    };
-  }
-  
-  async researchCompany(companyName: string, position: string) {
-    const response = await this.openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "You are a career research expert. Provide company insights including culture, mission, recent news, and required skills for a specific position. Return a JSON object with 'culture', 'mission', 'recentNews', 'requiredSkills' (array), and 'additionalInsights' fields."
-        },
-        {
-          role: "user",
-          content: `Research ${companyName} for the position of ${position}. Provide insights about company culture, mission, recent developments, and key skills required for this role.`
-        }
-      ],
-      response_format: { type: "json_object" }
-    });
-
-    const research = JSON.parse(response.choices[0].message.content || '{}');
-    return {
-      culture: research.culture || '',
-      mission: research.mission || '',
-      recentNews: research.recentNews || '',
-      requiredSkills: research.requiredSkills || []
-    };
-  }
-  
-  async generateInterviewQuestions(companyName: string, position: string, userSkills: string[], experience: string) {
-    const response = await this.openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert interviewer. Generate a set of 10 relevant interview questions based on the candidate's resume, company, and position. Return a JSON object with 'questions' array, where each question has 'id', 'text', 'type' (behavioral, technical, situational), and 'difficulty' (easy, medium, hard)."
-        },
-        {
-          role: "user",
-          content: `Generate interview questions for:
-          Company: ${companyName}
-          Position: ${position}
-          Candidate Skills: ${userSkills.join(', ')}
-          Experience: ${experience}`
-        }
-      ],
-      response_format: { type: "json_object" }
-    });
-
-    const questionData = JSON.parse(response.choices[0].message.content || '{}');
-    return { questions: questionData.questions || [] };
-  }
-  
-  async evaluateResponse(question: string, response: string) {
-    const feedbackResponse = await this.openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "You are an interview coach. Analyze the candidate's response and provide constructive feedback. Return a JSON object with 'score' (1-10), 'strengths' (array), 'improvements' (array), and 'suggestion' (string)."
-        },
-        {
-          role: "user",
-          content: `Evaluate this interview response:
-          Question: ${question}
-          Response: ${response}`
-        }
-      ],
-      response_format: { type: "json_object" }
-    });
-
-    return JSON.parse(feedbackResponse.choices[0].message.content || '{}');
-  }
-  
-  async generateSuggestions(context: string, conversation: string, userProfile: any) {
-    const suggestionResponse = await this.openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "You are a real-time interview assistant. Provide helpful suggestions, talking points, and follow-up questions based on the conversation context. Return a JSON object with 'keyPoints' (array), 'followUpSuggestions' (array), 'communicationTips' (array), and 'relevantAchievements' (array)."
-        },
-        {
-          role: "user",
-          content: `Provide real-time assistance for this interview conversation:
-          Context: ${context}
-          Recent conversation: ${conversation}
-          User background: ${JSON.stringify(userProfile)}`
-        }
-      ],
-      response_format: { type: "json_object" }
-    });
-
-    return JSON.parse(suggestionResponse.choices[0].message.content || '{}');
-  }
-}
-
-export class AnthropicProvider implements AIProvider {
-  private anthropic: Anthropic;
-  
-  constructor(apiKey: string) {
-    this.anthropic = new Anthropic({ apiKey });
-  }
-  
-  async analyzeResume(content: string) {
-    const response = await this.anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: `Analyze this resume and extract information in JSON format:
-          
-Resume: ${content}
-
-Please provide a JSON response with:
-- skills: array of technical and soft skills mentioned
-- experience: brief summary of work experience  
-- achievements: array of key accomplishments
-
-Format: {"skills": ["skill1", "skill2"], "experience": "summary", "achievements": ["achievement1"]}`
-        }
-      ],
-    });
-
-    try {
-      const textContent = response.content.find(block => block.type === 'text');
-      if (textContent && 'text' in textContent) {
-        const analysis = JSON.parse(textContent.text);
-        return {
-          skills: analysis.skills || [],
-          experience: analysis.experience || '',
-          achievements: analysis.achievements || []
-        };
-      }
-      throw new Error('No text content found');
-    } catch {
-      return {
-        skills: this.extractSkillsFromText(content),
-        experience: 'Professional with relevant industry experience',
-        achievements: this.extractAchievementsFromText(content)
-      };
-    }
-  }
-  
-  async researchCompany(companyName: string, position: string) {
-    const response = await this.anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: `Research ${companyName} for the position of ${position}. Provide insights about company culture, mission, recent developments, and key skills required for this role.
-
-Return JSON format: {"culture": "...", "mission": "...", "recentNews": "...", "requiredSkills": ["skill1", "skill2"]}`
-        }
-      ],
-    });
-
-    try {
-      const textContent = response.content.find(block => block.type === 'text');
-      if (textContent && 'text' in textContent) {
-        const research = JSON.parse(textContent.text);
-        return {
-          culture: research.culture || `${companyName} fosters innovation and collaboration`,
-          mission: research.mission || `${companyName} is committed to excellence`,
-          recentNews: research.recentNews || `${companyName} continues to grow`,
-          requiredSkills: research.requiredSkills || this.getDefaultSkillsForPosition(position)
-        };
-      }
-      throw new Error('No text content found');
-    } catch {
-      return {
-        culture: `${companyName} values teamwork and innovation`,
-        mission: `${companyName} strives for industry leadership`,
-        recentNews: `${companyName} is focused on growth opportunities`,
-        requiredSkills: this.getDefaultSkillsForPosition(position)
-      };
-    }
-  }
-  
-  async generateInterviewQuestions(companyName: string, position: string, userSkills: string[], experience: string) {
-    const response = await this.anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: `Generate 10 interview questions for:
-Company: ${companyName}
-Position: ${position}
-Candidate Skills: ${userSkills.join(', ')}
-Experience: ${experience}
-
-Return JSON: {"questions": [{"id": "q1", "text": "...", "type": "behavioral|technical|situational", "difficulty": "easy|medium|hard"}]}`
-        }
-      ],
-    });
-
-    try {
-      const textContent = response.content.find(block => block.type === 'text');
-      if (textContent && 'text' in textContent) {
-        const questionData = JSON.parse(textContent.text);
-        return { questions: questionData.questions || [] };
-      }
-      throw new Error('No text content found');
-    } catch {
-      return this.getDefaultQuestions(companyName, position, userSkills);
-    }
-  }
-  
-  async evaluateResponse(question: string, response: string) {
-    const feedbackResponse = await this.anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: `Evaluate this interview response:
-Question: ${question}
-Response: ${response}
-
-Return JSON: {"score": 1-10, "strengths": ["strength1"], "improvements": ["improvement1"], "suggestion": "overall suggestion"}`
-        }
-      ],
-    });
-
-    try {
-      const textContent = feedbackResponse.content.find(block => block.type === 'text');
-      if (textContent && 'text' in textContent) {
-        return JSON.parse(textContent.text);
-      }
-      throw new Error('No text content found');
-    } catch {
-      return this.getBasicFeedback(response);
-    }
-  }
-  
-  async generateSuggestions(context: string, conversation: string, userProfile: any) {
-    const suggestionResponse = await this.anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: `Provide real-time interview assistance:
-Context: ${context}
-Conversation: ${conversation}
-User Profile: ${JSON.stringify(userProfile)}
-
-Return JSON: {"keyPoints": ["point1"], "followUpSuggestions": ["suggestion1"], "communicationTips": ["tip1"], "relevantAchievements": ["achievement1"]}`
-        }
-      ],
-    });
-
-    try {
-      const textContent = suggestionResponse.content.find(block => block.type === 'text');
-      if (textContent && 'text' in textContent) {
-        return JSON.parse(textContent.text);
-      }
-      throw new Error('No text content found');
-    } catch {
-      return this.getBasicSuggestions(userProfile);
-    }
-  }
-
-  private extractSkillsFromText(text: string): string[] {
-    const commonSkills = [
-      'JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'Java', 'C++', 'SQL',
-      'HTML', 'CSS', 'Angular', 'Vue', 'Express', 'MongoDB', 'PostgreSQL', 'AWS',
-      'Docker', 'Kubernetes', 'Git', 'Agile', 'Scrum', 'Leadership', 'Communication'
-    ];
-    
-    return commonSkills.filter(skill => 
-      text.toLowerCase().includes(skill.toLowerCase())
-    ).slice(0, 8);
-  }
-  
-  private extractAchievementsFromText(text: string): string[] {
-    const lines = text.split('\n');
-    return lines.filter(line => 
-      /\b(achieved|improved|increased|reduced|led|managed|delivered)\b/i.test(line)
-    ).slice(0, 5);
-  }
-  
-  private getDefaultSkillsForPosition(position: string): string[] {
-    const positionSkills: { [key: string]: string[] } = {
-      'developer': ['Programming', 'Problem Solving', 'Version Control', 'Testing'],
-      'manager': ['Leadership', 'Communication', 'Project Management', 'Strategic Planning'],
-      'designer': ['Creative Thinking', 'User Experience', 'Visual Design', 'Prototyping'],
-      'analyst': ['Data Analysis', 'Critical Thinking', 'Research', 'Reporting']
-    };
-    
-    const positionLower = position.toLowerCase();
-    for (const [key, skills] of Object.entries(positionSkills)) {
-      if (positionLower.includes(key)) return skills;
-    }
-    
-    return ['Communication', 'Problem Solving', 'Team Collaboration', 'Adaptability'];
-  }
-
-  private getDefaultQuestions(companyName: string, position: string, userSkills: string[]) {
-    return {
-      questions: [
-        { id: 'q1', text: `Tell me about your experience with ${userSkills[0] || 'relevant technologies'}.`, type: 'technical', difficulty: 'medium' },
-        { id: 'q2', text: 'Describe a challenging project you worked on.', type: 'behavioral', difficulty: 'medium' },
-        { id: 'q3', text: `Why are you interested in ${companyName}?`, type: 'motivational', difficulty: 'easy' }
-      ]
-    };
-  }
-
-  private getBasicFeedback(response: string) {
-    const wordCount = response.split(' ').length;
-    const score = Math.min(10, Math.max(3, Math.floor(wordCount / 20) + 5));
-    
-    return {
-      score,
-      strengths: wordCount > 50 ? ['Detailed response'] : [],
-      improvements: wordCount < 50 ? ['Provide more detail'] : [],
-      suggestion: 'Good response! Consider adding specific examples.'
-    };
-  }
-
-  private getBasicSuggestions(userProfile: any) {
-    return {
-      keyPoints: ['Highlight your key skills', 'Mention relevant experience'],
-      followUpSuggestions: ['Ask about team structure', 'Inquire about growth opportunities'],
-      communicationTips: ['Maintain eye contact', 'Speak clearly'],
-      relevantAchievements: userProfile.achievements?.slice(0, 3) || []
-    };
-  }
-}
-
 export class GeminiProvider implements AIProvider {
   private genai: GoogleGenerativeAI;
   private model: any;
@@ -917,13 +555,7 @@ export class UniversalAIProvider implements AIProvider {
   private fallbackProvider: AIProvider;
   
   constructor(apiKeys: { [provider: string]: string } = {}) {
-    // Initialize available providers
-    if (apiKeys.openai) {
-      this.providers.set('openai', new OpenAIProvider(apiKeys.openai));
-    }
-    if (apiKeys.anthropic) {
-      this.providers.set('anthropic', new AnthropicProvider(apiKeys.anthropic));
-    }
+    
     if (apiKeys.gemini) {
       this.providers.set('gemini', new GeminiProvider(apiKeys.gemini));
     }
@@ -931,14 +563,14 @@ export class UniversalAIProvider implements AIProvider {
       this.providers.set('huggingface', new HuggingFaceProvider(apiKeys.huggingface));
     }
     
-    // Always have HuggingFace as fallback (free tier)
+    
     this.fallbackProvider = new HuggingFaceProvider();
     this.providers.set('fallback', this.fallbackProvider);
   }
   
   private async tryProviders<T>(operation: (provider: AIProvider) => Promise<T>): Promise<T> {
-    // Try each provider in order of preference
-    const providerOrder = ['anthropic', 'openai', 'gemini', 'huggingface', 'fallback'];
+    // 
+    const providerOrder = ['gemini', 'huggingface', 'fallback'];
     
     for (const providerName of providerOrder) {
       const provider = this.providers.get(providerName);
@@ -977,12 +609,6 @@ export class UniversalAIProvider implements AIProvider {
   
   addProvider(name: string, apiKey: string) {
     switch (name.toLowerCase()) {
-      case 'openai':
-        this.providers.set('openai', new OpenAIProvider(apiKey));
-        break;
-      case 'anthropic':
-        this.providers.set('anthropic', new AnthropicProvider(apiKey));
-        break;
       case 'gemini':
         this.providers.set('gemini', new GeminiProvider(apiKey));
         break;
@@ -1009,10 +635,6 @@ export function createAIProvider(userApiKeys?: { [provider: string]: string }, p
   // If specific provider requested and available, use it
   if (preferredProvider && userApiKeys?.[preferredProvider]) {
     switch (preferredProvider) {
-      case 'openai':
-        return new OpenAIProvider(userApiKeys.openai);
-      case 'anthropic':
-        return new AnthropicProvider(userApiKeys.anthropic);
       case 'gemini':
         return new GeminiProvider(userApiKeys.gemini);
       case 'huggingface':
