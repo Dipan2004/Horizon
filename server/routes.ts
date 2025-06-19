@@ -4,25 +4,107 @@ import { storage } from "./storage";
 import { insertResumeSchema, insertCompanyInsightsSchema, insertInterviewSessionSchema, insertUserSchema } from "@shared/schema";
 import { createAIProvider, UniversalAIProvider } from "./ai-service";
 import multer from "multer";
-
+import { db } from "./db";
+import { resumes, interviews, type NewResume, type NewInterview } from "./db/schema";
+import { eq } from "drizzle-orm";
 
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
 }
 
-
 const upload = multer({ 
   dest: 'uploads/',
   limits: { fileSize: 10 * 1024 * 1024 } // 10 MB limit
-
 });
-
 
 let globalAIProvider = createAIProvider();
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  
+  // New Neon DB routes
+  app.post('/api/save-resume', async (req, res) => {
+    try {
+      const { userEmail, rawText, skills, experience, achievements } = req.body;
+      
+      if (!userEmail || !rawText) {
+        return res.status(400).json({ error: 'userEmail and rawText are required' });
+      }
+
+      const newResume: NewResume = {
+        userEmail,
+        rawText,
+        skills: skills || [],
+        experience: experience || '',
+        achievements: achievements || [],
+      };
+
+      const result = await db.insert(resumes).values(newResume).returning();
+      
+      res.json({ 
+        message: 'Resume saved successfully', 
+        resume: result[0] 
+      });
+    } catch (error) {
+      console.error('Save resume error:', error);
+      res.status(500).json({ error: 'Failed to save resume' });
+    }
+  });
+
+  app.post('/api/save-interview', async (req, res) => {
+    try {
+      const { userEmail, question, answer, score, feedback } = req.body;
+      
+      if (!userEmail || !question || !answer) {
+        return res.status(400).json({ error: 'userEmail, question, and answer are required' });
+      }
+
+      const newInterview: NewInterview = {
+        userEmail,
+        question,
+        answer,
+        score: score || null,
+        feedback: feedback || null,
+      };
+
+      const result = await db.insert(interviews).values(newInterview).returning();
+      
+      res.json({ 
+        message: 'Interview data saved successfully', 
+        interview: result[0] 
+      });
+    } catch (error) {
+      console.error('Save interview error:', error);
+      res.status(500).json({ error: 'Failed to save interview data' });
+    }
+  });
+
+  // Get user's resumes
+  app.get('/api/resumes/:userEmail', async (req, res) => {
+    try {
+      const { userEmail } = req.params;
+      const userResumes = await db.select().from(resumes).where(eq(resumes.userEmail, userEmail));
+      
+      res.json(userResumes);
+    } catch (error) {
+      console.error('Get resumes error:', error);
+      res.status(500).json({ error: 'Failed to fetch resumes' });
+    }
+  });
+
+  // Get user's interviews
+  app.get('/api/interviews/:userEmail', async (req, res) => {
+    try {
+      const { userEmail } = req.params;
+      const userInterviews = await db.select().from(interviews).where(eq(interviews.userEmail, userEmail));
+      
+      res.json(userInterviews);
+    } catch (error) {
+      console.error('Get interviews error:', error);
+      res.status(500).json({ error: 'Failed to fetch interviews' });
+    }
+  });
+
+  // Existing routes from your original code
   app.post('/api/user/api-keys', async (req, res) => {
     try {
       const { userId, provider, apiKey } = req.body;
@@ -36,7 +118,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      
       const updateData: any = {};
       switch (provider.toLowerCase()) {
         case 'huggingface':
@@ -51,7 +132,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
       }
 
-      
       if (globalAIProvider instanceof UniversalAIProvider) {
         globalAIProvider.addProvider(provider, apiKey);
       }
@@ -68,7 +148,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { provider } = req.params;
       const { userId } = req.body;
 
-      
       if (!['huggingface', 'gemini'].includes(provider.toLowerCase())) {
         return res.status(400).json({ 
           error: 'Unsupported provider. Only HuggingFace and Gemini are supported.' 
@@ -108,7 +187,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
   app.post('/api/assistant/suggest', async (req, res) => {
     try {
       const { context, conversation, userProfile } = req.body;
@@ -120,8 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to generate suggestions' });
     }
   });
-  
-  
+
   app.post('/api/resume/upload', upload.single('resume'), async (req: MulterRequest, res) => {
     try {
       if (!req.file) {
@@ -131,11 +208,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fs = await import('fs');
       const fileContent = fs.readFileSync(req.file.path, 'utf-8');
       
-      
       const analysis = await globalAIProvider.analyzeResume(fileContent);
       
       const resumeData = {
-        userId: 1, // For demo purposes, using user ID 1
+        userId: 1,
         filename: req.file.originalname,
         content: fileContent,
         skills: analysis.skills || [],
@@ -146,7 +222,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertResumeSchema.parse(resumeData);
       const resume = await storage.createResume(validatedData);
       
-      
       fs.unlinkSync(req.file.path);
       
       res.json(resume);
@@ -156,7 +231,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user's resume
   app.get('/api/resume/user/:userId', async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
@@ -173,7 +247,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Company research
   app.post('/api/company/research', async (req, res) => {
     try {
       const { companyName, position } = req.body;
@@ -182,13 +255,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Company name and position are required' });
       }
 
-      // Check if insights already exist
       const existing = await storage.getCompanyInsights(companyName, position);
       if (existing) {
         return res.json(existing);
       }
 
-      
       const research = await globalAIProvider.researchCompany(companyName, position);
       
       const insightsData = {
@@ -211,14 +282,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Start mock interview session
   app.post('/api/interview/start', async (req, res) => {
     try {
       const { userId, companyName, position, resumeId } = req.body;
       
-      
       const resume = await storage.getResumeByUserId(userId);
-      
       
       const questionData = await globalAIProvider.generateInterviewQuestions(
         companyName,
@@ -247,7 +315,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
   app.post('/api/interview/:sessionId/response', async (req, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
@@ -258,13 +325,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Interview session not found' });
       }
 
-      
       const questionText = Array.isArray(session.questions) 
         ? session.questions.find((q: any) => q.id === questionId)?.text || 'Unknown question'
         : 'Unknown question';
       
       const feedback = await globalAIProvider.evaluateResponse(questionText, response);
-      
       
       const updatedResponses = [...(session.responses as any[] || []), {
         questionId,
@@ -284,7 +349,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
   app.get('/api/interview/sessions/:userId', async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
@@ -296,7 +360,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
   app.get('/api/interview/session/:sessionId', async (req, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
@@ -313,7 +376,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
   app.post('/api/interview/:sessionId/complete', async (req, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
@@ -334,7 +396,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Health check endpoint
   app.get('/api/health', async (req, res) => {
     try {
       const providers = globalAIProvider instanceof UniversalAIProvider 

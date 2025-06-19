@@ -569,7 +569,7 @@ export class UniversalAIProvider implements AIProvider {
   }
   
   private async tryProviders<T>(operation: (provider: AIProvider) => Promise<T>): Promise<T> {
-    // 
+    
     const providerOrder = ['gemini', 'huggingface', 'fallback'];
     
     for (const providerName of providerOrder) {
@@ -632,7 +632,7 @@ export class UniversalAIProvider implements AIProvider {
 }
 
 export function createAIProvider(userApiKeys?: { [provider: string]: string }, preferredProvider: string = 'huggingface'): AIProvider {
-  // If specific provider requested and available, use it
+  
   if (preferredProvider && userApiKeys?.[preferredProvider]) {
     switch (preferredProvider) {
       case 'gemini':
@@ -642,6 +642,6 @@ export function createAIProvider(userApiKeys?: { [provider: string]: string }, p
     }
   }
   
-  // Use Universal provider for automatic fallback
+  
   return new UniversalAIProvider(userApiKeys || {});
 }
