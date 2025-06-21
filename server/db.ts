@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
 import * as schema from "./db/schema";
 
-// Load environment variables
+
 config();
 
 neonConfig.webSocketConstructor = ws;

@@ -1,4 +1,4 @@
-import type { Express, Request } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertResumeSchema, insertCompanyInsightsSchema, insertInterviewSessionSchema, insertUserSchema } from "@shared/schema";
@@ -22,7 +22,7 @@ let globalAIProvider = createAIProvider();
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // New Neon DB routes
-  app.post('/api/save-resume', async (req, res) => {
+  app.post('/api/save-resume', async (req: Request, res: Response) => {
     try {
       const { userEmail, rawText, skills, experience, achievements } = req.body;
       
@@ -32,7 +32,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const newResume: NewResume = {
         userEmail,
-        rawText,
+        rawText: rawText.replace(/\u0000/g, ''),
         skills: skills || [],
         experience: experience || '',
         achievements: achievements || [],
@@ -50,7 +50,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/save-interview', async (req, res) => {
+  app.post('/api/save-interview', async (req: Request, res: Response) => {
     try {
       const { userEmail, question, answer, score, feedback } = req.body;
       
@@ -79,7 +79,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's resumes
-  app.get('/api/resumes/:userEmail', async (req, res) => {
+  app.get('/api/resumes/:userEmail', async (req: Request, res: Response) => {
     try {
       const { userEmail } = req.params;
       const userResumes = await db.select().from(resumes).where(eq(resumes.userEmail, userEmail));
@@ -92,7 +92,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's interviews
-  app.get('/api/interviews/:userEmail', async (req, res) => {
+  app.get('/api/interviews/:userEmail', async (req: Request, res: Response) => {
     try {
       const { userEmail } = req.params;
       const userInterviews = await db.select().from(interviews).where(eq(interviews.userEmail, userEmail));
@@ -104,8 +104,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete resume route
+  app.delete('/api/resume/:id', async (req: Request, res: Response) => {
+    try {
+      const resumeId = parseInt(req.params.id);
+      
+      if (isNaN(resumeId)) {
+        return res.status(400).json({ error: 'Invalid resume ID' });
+      }
+
+      // Delete the resume
+      const deletedResume = await db.delete(resumes).where(eq(resumes.id, resumeId)).returning();
+      
+      if (deletedResume.length === 0) {
+        return res.status(404).json({ error: 'Resume not found' });
+      }
+      
+      res.json({ 
+        message: 'Resume deleted successfully', 
+        resume: deletedResume[0] 
+      });
+    } catch (error) {
+      console.error('Delete resume error:', error);
+      res.status(500).json({ error: 'Failed to delete resume' });
+    }
+  });
+
   // Existing routes from your original code
-  app.post('/api/user/api-keys', async (req, res) => {
+  app.post('/api/user/api-keys', async (req: Request, res: Response) => {
     try {
       const { userId, provider, apiKey } = req.body;
       
@@ -143,7 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/user/api-keys/:provider', async (req, res) => {
+  app.delete('/api/user/api-keys/:provider', async (req: Request, res: Response) => {
     try {
       const { provider } = req.params;
       const { userId } = req.body;
@@ -165,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/user/available-providers', async (req, res) => {
+  app.get('/api/user/available-providers', async (req: Request, res: Response) => {
     try {
       if (globalAIProvider instanceof UniversalAIProvider) {
         const providers = globalAIProvider.getAvailableProviders();
@@ -187,7 +213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/assistant/suggest', async (req, res) => {
+  app.post('/api/assistant/suggest', async (req: Request, res: Response) => {
     try {
       const { context, conversation, userProfile } = req.body;
       
@@ -199,7 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/resume/upload', upload.single('resume'), async (req: MulterRequest, res) => {
+  app.post('/api/resume/upload', upload.single('resume'), async (req: MulterRequest, res: Response) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
@@ -231,7 +257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/resume/user/:userId', async (req, res) => {
+  app.get('/api/resume/user/:userId', async (req: Request, res: Response) => {
     try {
       const userId = parseInt(req.params.userId);
       const resume = await storage.getResumeByUserId(userId);
@@ -247,7 +273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/company/research', async (req, res) => {
+  app.post('/api/company/research', async (req: Request, res: Response) => {
     try {
       const { companyName, position } = req.body;
       
@@ -282,7 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/interview/start', async (req, res) => {
+  app.post('/api/interview/start', async (req: Request, res: Response) => {
     try {
       const { userId, companyName, position, resumeId } = req.body;
       
@@ -315,7 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/interview/:sessionId/response', async (req, res) => {
+  app.post('/api/interview/:sessionId/response', async (req: Request, res: Response) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
       const { questionId, response } = req.body;
@@ -349,7 +375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/interview/sessions/:userId', async (req, res) => {
+  app.get('/api/interview/sessions/:userId', async (req: Request, res: Response) => {
     try {
       const userId = parseInt(req.params.userId);
       const sessions = await storage.getInterviewSessionsByUser(userId);
@@ -360,7 +386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/interview/session/:sessionId', async (req, res) => {
+  app.get('/api/interview/session/:sessionId', async (req: Request, res: Response) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
       const session = await storage.getInterviewSession(sessionId);
@@ -376,7 +402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/interview/:sessionId/complete', async (req, res) => {
+  app.post('/api/interview/:sessionId/complete', async (req: Request, res: Response) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
       
@@ -396,7 +422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/health', async (req, res) => {
+  app.get('/api/health', async (req: Request, res: Response) => {
     try {
       const providers = globalAIProvider instanceof UniversalAIProvider 
         ? globalAIProvider.getAvailableProviders()
