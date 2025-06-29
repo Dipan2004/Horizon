@@ -4,6 +4,7 @@
 ✅ Resume Upload + Save to Neon	Done
 
 ✅ Resume Retrieval (/get-resumes)	Done
+
 ❌ Company/Job Role Analysis (Gemini)	⏭️ Next in line
 
 🔲 Interview Mode (Mic + Gemini Answer)	Not started
