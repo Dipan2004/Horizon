@@ -1,16 +1,9 @@
-#HORIZON
+#Horizon
 
-
-✅ Resume Upload + Save to Neon	Done
-
-✅ Resume Retrieval (/get-resumes)	Done
-
-❌ Company/Job Role Analysis (Gemini)	⏭️ Next in line
-
-🔲 Interview Mode (Mic + Gemini Answer)	Not started
-
-🔲 Save Interview Q&A to Neon	Not started
-
-🔲 View Interview History	Not started
-
-🔲 Resume Analyzer (Key Point Extractor)	
+1. ✅ Upload Resume
+2. ✅ Retrieve Resume
+3. ✅ Analyze Resume (Key Points, Skills, Experience)
+4. ✅ [New] Start Assistant (uses analysis → auto-triggers Gemini Q&A mode)
+5. 🔄 Continuous Interview via Mic or Typed Input
+6. 🔲 Save Q&A to Neon
+7. 🔲 View Interview History
